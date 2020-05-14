@@ -1,20 +1,19 @@
 package com.luck.picture.lib.adapter;
 
 import android.content.Context;
-
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.luck.picture.lib.R;
 import com.luck.picture.lib.config.PictureMimeType;
 import com.luck.picture.lib.config.PictureSelectionConfig;
-import com.luck.picture.lib.entity.LocalMedia;
 import com.luck.picture.lib.entity.LocalMediaFolder;
+import com.luck.picture.lib.listener.OnAlbumItemClickListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +21,7 @@ import java.util.List;
 /**
  * @author：luck
  * @date：2016-12-11 17:02
- * @describe：文件夹目录
+ * @describe：PictureAlbumDirectoryAdapter
  */
 public class PictureAlbumDirectoryAdapter extends RecyclerView.Adapter<PictureAlbumDirectoryAdapter.ViewHolder> {
     private List<LocalMediaFolder> folders = new ArrayList<>();
@@ -36,7 +35,7 @@ public class PictureAlbumDirectoryAdapter extends RecyclerView.Adapter<PictureAl
     }
 
     public void bindFolderData(List<LocalMediaFolder> folders) {
-        this.folders = folders;
+        this.folders = folders == null ? new ArrayList<>() : folders;
         notifyDataSetChanged();
     }
 
@@ -65,11 +64,14 @@ public class PictureAlbumDirectoryAdapter extends RecyclerView.Adapter<PictureAl
         int checkedNum = folder.getCheckedNum();
         holder.tvSign.setVisibility(checkedNum > 0 ? View.VISIBLE : View.INVISIBLE);
         holder.itemView.setSelected(isChecked);
+        if (config.style != null && config.style.pictureAlbumStyle != 0) {
+            holder.itemView.setBackgroundResource(config.style.pictureAlbumStyle);
+        }
         if (chooseMode == PictureMimeType.ofAudio()) {
             holder.ivFirstImage.setImageResource(R.drawable.picture_audio_placeholder);
         } else {
-            if (config.imageEngine != null) {
-                config.imageEngine.loadFolderImage(holder.itemView.getContext(),
+            if (PictureSelectionConfig.imageEngine != null) {
+                PictureSelectionConfig.imageEngine.loadFolderImage(holder.itemView.getContext(),
                         imagePath, holder.ivFirstImage);
             }
         }
@@ -79,7 +81,7 @@ public class PictureAlbumDirectoryAdapter extends RecyclerView.Adapter<PictureAl
                 : context.getString(R.string.picture_camera_roll) : name;
         holder.tvFolderName.setText(context.getString(R.string.picture_camera_roll_num, firstTitle, imageNum));
         holder.itemView.setOnClickListener(view -> {
-            if (onItemClickListener != null) {
+            if (onAlbumItemClickListener != null) {
                 int size = folders.size();
                 for (int i = 0; i < size; i++) {
                     LocalMediaFolder mediaFolder = folders.get(i);
@@ -87,7 +89,7 @@ public class PictureAlbumDirectoryAdapter extends RecyclerView.Adapter<PictureAl
                 }
                 folder.setChecked(true);
                 notifyDataSetChanged();
-                onItemClickListener.onItemClick(folder.isCameraFolder(), folder.getName(), folder.getImages());
+                onAlbumItemClickListener.onItemClick(position, folder.isCameraFolder(), folder.getBucketId(), folder.getName(), folder.getData());
             }
         });
     }
@@ -112,13 +114,9 @@ public class PictureAlbumDirectoryAdapter extends RecyclerView.Adapter<PictureAl
         }
     }
 
-    private OnItemClickListener onItemClickListener;
+    private OnAlbumItemClickListener onAlbumItemClickListener;
 
-    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
-        this.onItemClickListener = onItemClickListener;
-    }
-
-    public interface OnItemClickListener {
-        void onItemClick(boolean isCameraFolder, String folderName, List<LocalMedia> images);
+    public void setOnAlbumItemClickListener(OnAlbumItemClickListener listener) {
+        this.onAlbumItemClickListener = listener;
     }
 }
