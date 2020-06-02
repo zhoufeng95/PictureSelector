@@ -19,6 +19,7 @@ import com.luck.picture.lib.engine.CacheResourcesEngine;
 import com.luck.picture.lib.engine.ImageEngine;
 import com.luck.picture.lib.entity.LocalMedia;
 import com.luck.picture.lib.listener.OnCustomCameraInterfaceListener;
+import com.luck.picture.lib.listener.OnCustomImagePreviewCallback;
 import com.luck.picture.lib.listener.OnResultCallbackListener;
 import com.luck.picture.lib.listener.OnVideoSelectedPlayCallback;
 import com.luck.picture.lib.style.PictureCropParameterStyle;
@@ -161,6 +162,15 @@ public class PictureSelectionModel {
      */
     public PictureSelectionModel bindCustomPlayVideoCallback(OnVideoSelectedPlayCallback callback) {
         PictureSelectionConfig.customVideoPlayCallback = new WeakReference<>(callback).get();
+        return this;
+    }
+
+    /**
+     * @param callback Custom preview callback function
+     * @return
+     */
+    public PictureSelectionModel bindCustomPreviewCallback(OnCustomImagePreviewCallback callback) {
+        PictureSelectionConfig.onCustomImagePreviewCallback = new WeakReference<>(callback).get();
         return this;
     }
 
@@ -716,13 +726,24 @@ public class PictureSelectionModel {
     }
 
     /**
+     * After recording with the system camera, does it support playing the video immediately using the system player
+     *
+     * @param isQuickCapture
+     * @return
+     */
+    public PictureSelectionModel isQuickCapture(boolean isQuickCapture) {
+        selectionConfig.isQuickCapture = isQuickCapture;
+        return this;
+    }
+
+    /**
      * @param isOriginalControl Whether the original image is displayed
      * @return
      */
     public PictureSelectionModel isOriginalImageControl(boolean isOriginalControl) {
-        selectionConfig.isOriginalControl = selectionConfig.camera
-                || selectionConfig.chooseMode == PictureMimeType.ofVideo()
-                || selectionConfig.chooseMode == PictureMimeType.ofAudio() ? false : isOriginalControl;
+        selectionConfig.isOriginalControl = !selectionConfig.camera
+                && selectionConfig.chooseMode != PictureMimeType.ofVideo()
+                && selectionConfig.chooseMode != PictureMimeType.ofAudio() && isOriginalControl;
         return this;
     }
 
